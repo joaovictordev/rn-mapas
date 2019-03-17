@@ -1,0 +1,70 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/register.css">
+{% endblock %}
+
+{% block content %}
+<div class="ui grid container centered">
+<div class="ten wide column">
+
+{% include 'auth/message.html' %}
+
+<form action="" method="POST" id="form-register" class="ui form segment eight wide column centered">
+    {{ form_template.csrf_token}}
+
+    <h2 class="ui blue header">
+        <div class="content">
+            Cadastro Pessoal
+        </div>
+    </h2>
+
+    <div class="field">
+        <label>Nome</label>
+        <div class="two fields">
+            <div class="field">
+                    {{ form_template.name(placeholder="Primeiro nome") }}
+            </div>
+            <div class="field">
+                    {{ form_template.lastname(placeholder="Sobrenome") }}
+            </div>
+        </div>
+    </div>
+
+    <div class="field">
+        <label>Descrição Pessoal</label>
+        {{ form_template.description(placeholder="Conte-nos algo sobre você?") }}
+    </div>
+
+    <div class="field">
+        <label>Email</label>
+        <div class="ui left icon input">
+            <i class="envelope icon"></i>
+            {{ form_template.email(placeholder="Digite seu email") }}
+        </div>
+    </div>
+
+    <div class="field">
+        <label>Senha</label>
+        <div class="two fields">
+            <div class="field">
+                <div class="ui left icon input">
+                <i class="lock icon"></i>
+                    {{ form_template.password(placeholder="Informe sua senha secreta") }}
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui left icon input">
+                <i class="lock icon"></i>
+                    {{ form_template.password_confirm(placeholder="Insira sua senha novamente") }} 
+                </div> 
+            </div>
+        </div>
+    </div>
+
+    <button type="submit" class="ui primary button">Cadastrar</button>
+</form>
+
+</div>
+</div>
+{% endblock %}

@@ -1,0 +1,12 @@
+#map {
+width: 100%;
+font: 10pt "Helvetica Neue", Arial, Helvetica, sans-serif;
+}
+
+.menu{
+margin-bottom: 0 !important;
+}
+
+.layer-switcher {
+position: initial;
+}

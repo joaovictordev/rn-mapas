@@ -1,0 +1,48 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/login.css">
+{% endblock %}
+
+{% block content %}
+<div class="ui middle aligned center aligned grid">
+<div class="column">
+    {% include 'auth/message.html' %}
+    <h2 class="ui blue header">
+        <div class="content">
+            RN em Mapas
+        </div>
+    </h2>
+    <form action="" method="POST" class="ui large form">
+        {{ form_template.csrf_token}}
+        <div class="ui segment">
+            <div class="field">
+                <div class="ui left icon input">
+                    <i class="user icon"></i>
+                    {{ form_template.email(placeholder="Digite seu email") }}
+                </div>
+            </div>
+            <div class="field">
+                <div class="ui left icon input">
+                    <i class="lock icon"></i>
+                    {{ form_template.password(placeholder="Sua senha secreta") }}
+                </div>
+            </div>
+            <button type="submit" class="ui fluid large submit primary button">Login</button>
+        </div>
+
+        <div class="ui error message"></div>
+
+    </form>
+
+    <div class="ui message">
+    Não é cadastrado? <a href="/cadastrar-se">Sign Up</a>
+    </div>
+</div>
+</div>
+           
+{% endblock %}
+
+{% block scripts%}
+<script src="../static/js/login.js"></script>
+{% endblock %}

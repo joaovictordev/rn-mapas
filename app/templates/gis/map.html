@@ -1,0 +1,143 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/map.css">
+{% endblock %}
+
+{% block content %}
+<!-- sidebar -->
+<div id="sidebar" class="sidebar collapsed">
+
+<!-- Nav tabs -->
+<div class="sidebar-tabs">
+    <ul role="tablist">
+        <li><a href="#home" role="tab"><i class="clone icon"></i></a></li>
+        <li><a href="#download" role="tab"><i class="download icon"></i></a></li>
+        {% if current_user.is_authenticated %}
+        <li><a href="#upload" role="tab"><i class="upload icon"></i></a></li>
+        <li><a href="#profile" role="tab"><i class="id badge icon"></i></a></li>
+        {% endif %}
+    </ul>
+
+    <ul role="tablist">
+        <li><a href="#settings" role="tab"><i class="cog icon"></i></a></li>
+    </ul>
+</div>
+
+<!-- Tab panes -->
+<div class="sidebar-content">
+    <!-- Pane dos Layers -->
+    <div class="sidebar-pane" id="home">
+        <h1 class="sidebar-header">Layers<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+            <!-- list layers here -->
+            <div id="layers" class="layer-switcher"></div>
+    </div>
+
+    <div class="sidebar-pane" id="profile">
+        <h1 class="sidebar-header">Perfil do usuário<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+
+        <table class="ui celled table">
+            <thead>
+                <tr>
+                    <th>Nome</th>
+                    <td>{{ current_user.name }}</td>
+                    <td><a href=""><i class="edit icon"></i></a></td>
+                </tr>
+                <tr>
+                    <th>Sobrenome</th>
+                    <td>{{ current_user.lastname }}</td>
+                    <td><a href=""><i class="edit icon"></i></a></td>
+                </tr>
+                <tr>
+                    <th>Email</th>
+                    <td>{{ current_user.email }}</td>
+                    <td><a href=""><i class="edit icon"></i></a></td>
+                </tr>
+                <tr>
+                    <th>Senha</th>
+                    <td><i class="lock icon"></i> Secreto</td>
+                    <td><a href=""><i class="edit icon"></i></a></td>
+                </tr>
+            </thead>
+        </table>
+
+        <table class="ui celled table">
+            <thead>
+                <tr>
+                    <th>Minha descrição</th>
+                    <th><a href=""><i class="edit icon"></i></a></th>
+                </tr>
+            </thead>
+            <tbody id="description-cell">
+                <tr><td>{{ current_user.description }}</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="sidebar-pane" id="download">
+        <h1 class="sidebar-header">Download de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+
+        <!-- Botão de enviar mapa-->
+        <div class="ui vertical animated labeled icon button fluid">
+            <div class="visible content">Baixar todos</div>
+            <div class="hidden content"><i class="arrow down icon"></i></div>
+            <i class="map icon"></i>
+        </div>
+
+        <div class="ui horizontal divider">Selecionados para download</div>
+
+        <div class="ui relaxed divided list">
+            <div class="item">
+                <i class="trash alternate middle aligned icon"></i>
+                <div class="content">
+                <a class="header">Microrregiões 2018</a>
+                <div class="description">Autor: João Victor Rodrigues de Souza</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-pane" id="upload">
+        <h1 class="sidebar-header">Upload de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+
+        <!-- Botão de enviar mapa-->
+        <div class="ui vertical animated labeled icon button fluid">
+            <div class="visible content">Envie um Mapa</div>
+            <div class="hidden content"><i class="arrow up icon"></i></div>
+            <i class="map icon"></i>
+        </div>
+
+        <div class="ui horizontal divider">Mapas Enviados</div>   
+
+        <!-- Accordion -->
+        <div class="ui styled accordion">
+            <div class="title">
+                <i class="dropdown icon"></i>
+                Mesorregiões 2018
+            </div>
+            <div class="content">
+                <!-- Lista de detalhes de um mapa -->
+                <div class="ui horizontal bulleted list transition hidden">
+                    <a class="item">
+                        23-01-2019
+                    </a>
+                    <a class="item">
+                        Em espera
+                    </a>
+                    <a class="item">
+                        Enviar nova versão
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-pane" id="settings">
+        <h1 class="sidebar-header">Configurações<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+    </div>
+</div>
+</div>
+<!-- container map -->
+<div id="map" class="sidebar-map"></div>
+
+{% endblock %}

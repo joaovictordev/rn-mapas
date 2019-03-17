@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>RN em Mapas | UFERSA Angicos</title>
+    <link rel="icon" type="image/png" href="../static/img/logo.png"/>
+
+    {% block head %}
+    {% endblock %}
+
+    <!-- semantic css -->
+    <link rel="stylesheet" href="../static/semantic/semantic.min.css">
+    <!-- openlayers css -->
+    <link rel="stylesheet" href="../static/ol/ol.css">
+    <!-- sidebar-ol3 css -->
+    <link rel="stylesheet" href="../static/sidebar/ol3-sidebar.css"></link>
+    <!-- layerswitcher css -->
+    <link rel="stylesheet" href="../static/layerswitcher/ol-layerswitcher.css"></link>
+
+    
+</head>
+<body>
+    <!-- menu -->
+    <div class="ui menu">
+        <a href="/" class="item"><i class="map icon"></i>Mapas</a>
+        <a href="/sobre" class="item"><i class="info icon"></i>Sobre</a>
+        {% if current_user.is_authenticated %}
+
+        <div class="right menu">
+            <a class="active blue item inverted"><i class="user icon"></i>{{ current_user.name }}</a>
+            <a href="/logout" class="item"><i class="sign out icon"></i>Logout</a>
+        </div>
+
+        {% else %}
+        <div class="right menu">
+            <a href="/cadastrar-se" class="item"><i class="user plus icon"></i>Sign Up</a>
+            <a href="/login" class="item"><i class="sign in icon"></i>Log-in</a>
+        </div>
+
+        {% endif %}
+    </div>
+
+    {% block content %}
+    {% endblock %}
+
+    <!-- jquery -->
+    <script src="../static/jquery/jquery.min.js"></script>
+    <!-- semantic js -->
+    <script src="../static/semantic/semantic.min.js"></script>
+    <!-- openlayers js -->
+    <script src="../static/ol/ol.js"></script>
+    <!-- sidebar-ol3 js -->
+    <script src="../static/sidebar/ol3-sidebar.js"></script>
+    <!-- layerswitcher js -->
+    <script src="../static/layerswitcher/ol-layerswitcher.js"></script>
+    <!-- config-mapa js -->
+    <script src="../static/js/config-mapa.js"></script>
+    <!-- set height map -->
+    {% block scripts %}
+    {% endblock %}
+    <script>
+
+            //definindo altura do mapa
+            var alturaMenu = $('.menu').height()+2;
+            var alturaTela = $(window).height();
+            var alturaMapa = alturaTela - alturaMenu;
+            $("#map").css({ "height": +alturaMapa+"px" });
+
+            //mensagens de login e cadastro de usuários
+            $('.message .close')
+              .on('click', function() {
+                $(this)
+                    .closest('.message')
+                    .transition('fade')
+                ;
+              })
+            ;
+
+            //inicializando accordion
+            $('.ui.accordion')
+                .accordion()
+            ;
+    </script>
+
+</body>
+</html>
