@@ -15,12 +15,13 @@
         <li><a href="#download" role="tab"><i class="download icon"></i></a></li>
         {% if current_user.is_authenticated %}
         <li><a href="#upload" role="tab"><i class="upload icon"></i></a></li>
-        <li><a href="#profile" role="tab"><i class="id badge icon"></i></a></li>
         {% endif %}
     </ul>
 
     <ul role="tablist">
-        <li><a href="#settings" role="tab"><i class="cog icon"></i></a></li>
+        {% if current_user.is_authenticated %}
+        <li><a href="#profile" role="tab"><i class="id badge icon"></i></a></li>
+        {% endif %}
     </ul>
 </div>
 
@@ -29,34 +30,35 @@
     <!-- Pane dos Layers -->
     <div class="sidebar-pane" id="home">
         <h1 class="sidebar-header">Layers<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
-            <!-- list layers here -->
+            <!-- Lista dos layers aqui -->
             <div id="layers" class="layer-switcher"></div>
     </div>
 
     <div class="sidebar-pane" id="profile">
         <h1 class="sidebar-header">Perfil do usuário<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
 
+        <!-- Tabela com informações de usuário -->
         <table class="ui celled table">
             <thead>
                 <tr>
                     <th>Nome</th>
                     <td>{{ current_user.name }}</td>
-                    <td><a href=""><i class="edit icon"></i></a></td>
+                    <td><a href="">edit</a></td>
                 </tr>
                 <tr>
                     <th>Sobrenome</th>
                     <td>{{ current_user.lastname }}</td>
-                    <td><a href=""><i class="edit icon"></i></a></td>
+                    <td><a href="">edit</a></td>
                 </tr>
                 <tr>
                     <th>Email</th>
                     <td>{{ current_user.email }}</td>
-                    <td><a href=""><i class="edit icon"></i></a></td>
+                    <td><a href="">edit</a></td>
                 </tr>
                 <tr>
                     <th>Senha</th>
                     <td><i class="lock icon"></i> Secreto</td>
-                    <td><a href=""><i class="edit icon"></i></a></td>
+                    <td><a href="">edit</a></td>
                 </tr>
             </thead>
         </table>
@@ -65,7 +67,7 @@
             <thead>
                 <tr>
                     <th>Minha descrição</th>
-                    <th><a href=""><i class="edit icon"></i></a></th>
+                    <th><a href="">edit</a></th>
                 </tr>
             </thead>
             <tbody id="description-cell">
@@ -77,21 +79,21 @@
     <div class="sidebar-pane" id="download">
         <h1 class="sidebar-header">Download de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
 
-        <!-- Botão de enviar mapa-->
-        <div class="ui vertical animated labeled icon button fluid">
-            <div class="visible content">Baixar todos</div>
-            <div class="hidden content"><i class="arrow down icon"></i></div>
-            <i class="map icon"></i>
-        </div>
+        <div class="ui form">
+            <!-- Botão de download dos mapas selecionados -->
+            <button  type="submit" class="ui primary fluid button">
+                <i class="arrow down icon"></i>
+                Download
+            </button>
 
-        <div class="ui horizontal divider">Selecionados para download</div>
+            <div class="ui divider"></div>
+            <p>Mapas selecionados para download</p>
 
-        <div class="ui relaxed divided list">
-            <div class="item">
-                <i class="trash alternate middle aligned icon"></i>
-                <div class="content">
-                <a class="header">Microrregiões 2018</a>
-                <div class="description">Autor: João Victor Rodrigues de Souza</div>
+            <!-- Lista download de mapas-->
+            <div class="inline field">
+                <div class="ui checkbox">
+                    <input type="checkbox" tabindex="0" class="hidden">
+                    <label>Microrregiões 2018 por <a href="">João Victor Rodrigues de Souza</a></label>
                 </div>
             </div>
         </div>
@@ -100,29 +102,61 @@
     <div class="sidebar-pane" id="upload">
         <h1 class="sidebar-header">Upload de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
 
-        <!-- Botão de enviar mapa-->
-        <div class="ui vertical animated labeled icon button fluid">
-            <div class="visible content">Envie um Mapa</div>
-            <div class="hidden content"><i class="arrow up icon"></i></div>
-            <i class="map icon"></i>
+        <!-- Accordion de upload-->
+        <div class="ui accordion">
+            <div class="title">
+                <div class="ui primary fluid button">
+                    <i class="up arrow icon"></i>
+                    Envie um mapa
+                </div>
+            </div>
+            <div class="content">
+                {% include 'auth/message.html' %}
+                <!--Formulário de upload-->
+                <form class="ui form" enctype="multipart/form-data" method="POST">
+                    {{ form_template.csrf_token}}
+                    <div class="field">
+                        <label>Título do mapa</label>
+                        {{ form_template.title(placeholder="Digite o titulo do mapa") }}
+                    </div>
+                    <div class="field">
+                        <label>Categoria</label>
+                        {{ form_template.category(placeholder="Digite a categoria do mapa") }}
+                    </div>
+                    <div class="inline fields">
+                        <div class="eight wide field">
+                            {{ form_template.fileshape() }}
+                        </div>
+                        <div class="eight wide field">
+                            <button type="submit" class="ui button secondary fluid">Enviar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
 
-        <div class="ui horizontal divider">Mapas Enviados</div>   
+        <div class="ui divider"></div>
+        <p>Últimos mapas enviados</p>
 
         <!-- Accordion -->
+        {% for upload_item in list_uploads_user %}
         <div class="ui styled accordion">
             <div class="title">
                 <i class="dropdown icon"></i>
-                Mesorregiões 2018
+                {{ upload_item.title }}
             </div>
             <div class="content">
                 <!-- Lista de detalhes de um mapa -->
                 <div class="ui horizontal bulleted list transition hidden">
                     <a class="item">
-                        23-01-2019
+                        {{ upload_item.send_date }}
                     </a>
                     <a class="item">
-                        Em espera
+                        {% if upload_item.status == False %}
+                            Em espera
+                        {% else %}
+                            Aprovado
+                        {% endif %}
                     </a>
                     <a class="item">
                         Enviar nova versão
@@ -130,6 +164,8 @@
                 </div>
             </div>
         </div>
+        {% endfor %}
+
     </div>
 
     <div class="sidebar-pane" id="settings">

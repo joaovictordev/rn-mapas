@@ -41,7 +41,7 @@
                 ]
             }),
             new ol.layer.Group({
-                title: 'Overlays',
+                title: 'Mapas temáticos',
                 layers: [
                     new ol.layer.Image({
                         title: 'Countries',

@@ -11,7 +11,7 @@
     {% endblock %}
 
     <!-- semantic css -->
-    <link rel="stylesheet" href="../static/semantic/semantic.min.css">
+    <link rel="stylesheet" href="../static/semantic/semantic.css">
     <!-- openlayers css -->
     <link rel="stylesheet" href="../static/ol/ol.css">
     <!-- sidebar-ol3 css -->
@@ -29,7 +29,7 @@
         {% if current_user.is_authenticated %}
 
         <div class="right menu">
-            <a class="active blue item inverted"><i class="user icon"></i>{{ current_user.name }}</a>
+            <a class="active blue item"><i class="user icon"></i>{{ current_user.name }}</a>
             <a href="/logout" class="item"><i class="sign out icon"></i>Logout</a>
         </div>
 
@@ -48,7 +48,7 @@
     <!-- jquery -->
     <script src="../static/jquery/jquery.min.js"></script>
     <!-- semantic js -->
-    <script src="../static/semantic/semantic.min.js"></script>
+    <script src="../static/semantic/semantic.js"></script>
     <!-- openlayers js -->
     <script src="../static/ol/ol.js"></script>
     <!-- sidebar-ol3 js -->
@@ -60,28 +60,38 @@
     <!-- set height map -->
     {% block scripts %}
     {% endblock %}
+
     <script>
+    $(document).ready(function(){
 
-            //definindo altura do mapa
-            var alturaMenu = $('.menu').height()+2;
-            var alturaTela = $(window).height();
-            var alturaMapa = alturaTela - alturaMenu;
-            $("#map").css({ "height": +alturaMapa+"px" });
+      //definindo altura do mapa
+      var alturaMenu = $('.menu').height()+2;
+      var alturaTela = $(window).height();
+      var alturaMapa = alturaTela - alturaMenu;
+      $("#map").css({ "height": +alturaMapa+"px" });
 
-            //mensagens de login e cadastro de usuários
-            $('.message .close')
-              .on('click', function() {
-                $(this)
-                    .closest('.message')
-                    .transition('fade')
-                ;
-              })
-            ;
+      //mensagens de login e cadastro de usuários
+      $('.message .close')
+        .on('click', function() {
+          $(this)
+              .closest('.message')
+              .transition('fade')
+          ;
+        })
+      ;
 
-            //inicializando accordion
-            $('.ui.accordion')
-                .accordion()
-            ;
+      //inicializando accordion
+      $('.ui.accordion')
+          .accordion()
+      ;
+
+      //inicializando checkbox
+      $('.ui.checkbox')
+         .checkbox()
+      ;
+
+
+      });
     </script>
 
 </body>
