@@ -4,8 +4,11 @@ from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 from datetime import date
 import shapefile
+import pygeoif
 from geoalchemy2 import Geometry
-import os
+from sqlalchemy import Table, column, create_engine, Unicode, MetaData, insert
+from sqlalchemy.orm import mapper, create_session
+
 from app.models.forms import LoginForm, RegisterForm, UploadForm
 from app.models.tables import User, Map
 
@@ -46,47 +49,62 @@ def index():
 
             #definindo informações dos shapefiles
             shapefile_imported = shapefile.Reader(filename)
-            shapefile_geometry = shapefile_imported.shapes()
+            shapefile_shapes = shapefile_imported.shapes()
+            shapefile_type_name = shapefile_imported.shapeTypeName
             shapefile_records = shapefile_imported.records()
             shapefile_fields = shapefile_imported.fields
 
-            columns_to_insert = []
+            print(shapefile_imported.bbox)
 
-            #armazenando os campos e seus respectivos tipos em vetores
-            for field in shapefile_fields:
-                field_name = field[0]
-                field_type = field[1]
-                
-                if field_type == 'C':
-                    columns_to_insert.append(field_name +'= db.Column(db.Integer)')
-                elif field_type == 'N':
-                   columns_to_insert.append(field_name +'= db.Column(db.INumeric)')
-                elif field_type == 'F':
-                    columns_to_insert.append(field_name +'= db.Column(db.Float)')
-                elif field_type == 'L':
-                    columns_to_insert.append(field_name +'= db.Column(db.Boolean)')
-                elif field_type == 'D':
-                    columns_to_insert.append(field_name +'= db.Column(db.DateTime)')
+            #deleta o primeiro item do vetor que contem os campos
+            shapefile_fields.pop(0)
 
-                
+            #Nesse Bloco de código são geradas as tabelas com os campos
+            #de dados contidos nos shapefiles
+            class MapTable(object):
+                pass
 
-            print(columns_to_insert)
-            
-            #definindo a tabela que representa o mapa
-            class User(db.Model):
-                __tablename__ = map_title_lower
-                id = db.Column(db.Integer, primary_key=True)
-                
-            
+            engine_postgres = create_engine('postgresql://postgres:3333@localhost/rnmapas')
+            metadata = MetaData(bind=engine_postgres)
 
-   #         db.create_all()
-    #        db.session.commit()
-            #criando tabela no banco
+            #adcionado postgis
+            connection_with_db = engine_postgres.connect()
+            try:
+                connection_with_db.execute("CREATE EXTENSION postgis")
+            except Exception as e:
+                print(e)
+                print("extension postgis already exists")
+            connection_with_db.close()
 
-            #inserindo registros na tabela de um mapa
-#            me = User('admin', 'admin@example.com')
-#            db.session.add(me)
-#            db.session.commit()
+            #definindo o modelo de tabela que recebrá os shapefiles
+            map_table = db.Table(map_title_lower, metadata,
+                db.Column('id', db.Integer, primary_key=True, autoincrement=True),
+                *(db.Column(field[0], Unicode(255)) for field in shapefile_fields),
+                db.Column('geom', Geometry(geometry_type=shapefile_type_name, srid=4326))
+            )
+
+            metadata.create_all()
+            mapper(MapTable, map_table)
+            session = create_session(bind=engine_postgres, autocommit=False, autoflush=True)
+            session.commit()
+
+            #percorrendo a lista de registros para inserir no banco
+            record_id = 1
+            for record in shapefile_records:
+                #adcionando um id no inicio da lista de atributos de cada registro
+                record.insert(0, record_id)
+                record_to_insert = map_table.insert().values(record)
+                connection_with_db = engine_postgres.connect()
+                connection_with_db.execute(record_to_insert)
+                record_id += 1
+
+            for shape in shapefile_shapes:
+                gshape = pygeoif.MultiPolygon(pygeoif.geometry.as_shape(shape))
+                map_table.geom = 'SRID=4326;{0}'.format(gshape.wkt)
+                connection_with_db = engine_postgres.connect()
+                connection_with_db.execute(map_table.geom)
+
+
 
     return render_template("gis/map.html", form_template = form, list_uploads_user = list_uploads_user)
 
