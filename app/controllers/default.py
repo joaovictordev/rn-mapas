@@ -16,13 +16,13 @@ from app.models.tables import User, Map
 @app.route("/", methods=["POST","GET"])
 def index():
     form = UploadForm()
-
+    
     #carrega lista de uploads feitos pelo usuário
+    list_uploads_user = Map.query.filter_by(user_id = current_user.id).all()
+
     if current_user.is_anonymous:
         list_uploads_user = []
-    else:
-        list_uploads_user = Map.query.filter_by(user_id = current_user.id).all()
-
+         
     if request.method == "POST":
         #uploads dos arquivos
         for f in request.files.getlist("fileshape"):
@@ -80,7 +80,7 @@ def index():
             map_table = db.Table(map_title_lower, metadata,
                 db.Column('id', db.Integer, primary_key=True, autoincrement=True),
                 *(db.Column(field[0], Unicode(255)) for field in shapefile_fields),
-                db.Column('geom', Geometry(geometry_type=shapefile_type_name, srid=4326))
+                db.Column('geom', Geometry(geometry_type='GEOMETRY', srid=4326))
             )
 
             metadata.create_all()
@@ -90,19 +90,18 @@ def index():
 
             #percorrendo a lista de registros para inserir no banco
             record_id = 1
-            for record in shapefile_records:
+            for count, record in enumerate(shapefile_records):
                 #adcionando um id no inicio da lista de atributos de cada registro
                 record.insert(0, record_id)
+
+                gshape = pygeoif.MultiPolygon(pygeoif.geometry.as_shape(shapefile_shapes[count]))
+                geom = 'SRID=4326;{0}'.format(gshape.wkt)
+                record.append(geom)
+
                 record_to_insert = map_table.insert().values(record)
                 connection_with_db = engine_postgres.connect()
                 connection_with_db.execute(record_to_insert)
                 record_id += 1
-
-            for shape in shapefile_shapes:
-                gshape = pygeoif.MultiPolygon(pygeoif.geometry.as_shape(shape))
-                map_table.geom = 'SRID=4326;{0}'.format(gshape.wkt)
-                connection_with_db = engine_postgres.connect()
-                connection_with_db.execute(map_table.geom)
 
 
 
