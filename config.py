@@ -6,3 +6,4 @@ SQLALCHEMY_TRACK_MODIFICATIONS = True
 SECRET_KEY = 'themustsecretkey'
 
 UPLOAD_FOLDER = '/app/uploads'
+MAX_CONTENT_LENGTH = 16 * 1024 * 1024

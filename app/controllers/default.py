@@ -17,11 +17,11 @@ from app.models.tables import User, Map
 def index():
     form = UploadForm()
     
-    #carrega lista de uploads feitos pelo usuário
-    list_uploads_user = Map.query.filter_by(user_id = current_user.id).all()
-
     if current_user.is_anonymous:
         list_uploads_user = []
+    else:
+        #carrega lista de uploads feitos pelo usuário
+        list_uploads_user = Map.query.filter_by(user_id = current_user.id).all()
          
     if request.method == "POST":
         #uploads dos arquivos
@@ -53,8 +53,6 @@ def index():
             shapefile_type_name = shapefile_imported.shapeTypeName
             shapefile_records = shapefile_imported.records()
             shapefile_fields = shapefile_imported.fields
-
-            print(shapefile_imported.bbox)
 
             #deleta o primeiro item do vetor que contem os campos
             shapefile_fields.pop(0)
@@ -102,8 +100,9 @@ def index():
                 connection_with_db = engine_postgres.connect()
                 connection_with_db.execute(record_to_insert)
                 record_id += 1
-
-
+            
+            connection_with_db.close()
+            flash("Upload feito com sucesso!")
 
     return render_template("gis/map.html", form_template = form, list_uploads_user = list_uploads_user)
 
@@ -147,7 +146,7 @@ def login():
 
 
 #------------------------------Register--------------------------------
-@app.route("/cadastrar-se", methods=["POST","GET"])
+@app.route("/registre-se", methods=["POST","GET"])
 def register():
     #Instancia a classe RegisterForm de tables.py
     form = RegisterForm()
