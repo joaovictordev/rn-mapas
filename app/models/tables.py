@@ -47,14 +47,14 @@ class Map(db.Model):
     send_date = db.Column(db.DateTime, nullable=False)
     category = db.Column(db.String, nullable=False)
     status = db.Column(db.Boolean, nullable=False, default=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.Integer)
 
     def __init__(self, title, send_date, category, status, user_id):
         self.title = title
         self.send_date = send_date
         self.category = category
         self.status = status
-        self.user_id = user_id 
+        self.user_id = user_id
 
     def __repr__(self):
         return '<Map %r>' % self.title
