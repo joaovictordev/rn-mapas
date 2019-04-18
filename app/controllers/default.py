@@ -1,5 +1,5 @@
 from app import app, db
-from flask import render_template, redirect, flash, request, send_from_directory
+from flask import render_template, redirect, flash, request
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 from datetime import date
@@ -8,6 +8,9 @@ import pygeoif
 from geoalchemy2 import Geometry
 from sqlalchemy import Table, column, create_engine, Unicode, MetaData, insert
 from sqlalchemy.orm import mapper, create_session
+import os
+import requests
+import json
 
 from app.models.forms import LoginForm, RegisterForm, UploadForm
 from app.models.tables import User, Map
@@ -16,24 +19,46 @@ from app.models.tables import User, Map
 @app.route("/", methods=["POST","GET"])
 def index():
     form = UploadForm()
+
+    #------configurando conexão com postgres----------------------------------------------
+    engine_postgres = create_engine('postgresql://postgres:3333@localhost/rnmapas')
+    metadata = MetaData(bind=engine_postgres)
+
+    #------configurando geoserver---------------------------------------------------------
+    workspace = 'rnemmapas'
+    datastore = 'postgis_rnemmapas'
+    server = 'localhost:8080'
+    auth = ('admin', 'geoserver')
+    headers = {'Content-type': 'text/xml'}
+    #-------------------------------------------------------------------------------------
+
+    #------Pegando nome dos layers no wokspace do projeto para enviar pro openlayers------
+    layersInWorkspace = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace + '/layers.json'
+    lyr_list_response = requests.get(layersInWorkspace, auth=auth)
+
+    lyr_list_text = lyr_list_response.text
+    #--------------------------------------------------------------------------------------
     
+    #------Verificando o usuário para exibir os mapas enviados pelo usuário----------------
     if current_user.is_anonymous:
         list_uploads_user = []
     else:
         #carrega lista de uploads feitos pelo usuário
         list_uploads_user = Map.query.filter_by(user_id = current_user.id).all()
-         
+    #--------------------------------------------------------------------------------------
+
+    #------Tratando os arquivos enviados pelo formulário de upload-------------------------     
     if request.method == "POST":
-        #uploads dos arquivos
+        #Salvando arquivos na pasta de uploads
         for f in request.files.getlist("fileshape"):
             filename = secure_filename(f.filename)
-            f.save(filename)
+            f.save(os.path.join('uploads/', filename))
 
         #Pegando valores do formulário
         map_title = form.title.data
         map_category = form.category.data
 
-        #transformando o titulo para caracteres minusculos
+        #convertendo o título do mapa para caracteres minusculos
         map_title_lower = map_title.lower()
 
         verify_map_exists = Map.query.filter_by(title = map_title).first()
@@ -48,11 +73,12 @@ def index():
             db.session.commit()
 
             #definindo informações dos shapefiles
-            shapefile_imported = shapefile.Reader(filename)
+            shapefile_imported = shapefile.Reader(os.path.join('uploads/', filename))
             shapefile_shapes = shapefile_imported.shapes()
             shapefile_type_name = shapefile_imported.shapeTypeName
             shapefile_records = shapefile_imported.records()
             shapefile_fields = shapefile_imported.fields
+
 
             #deleta o primeiro item do vetor que contem os campos
             shapefile_fields.pop(0)
@@ -61,9 +87,6 @@ def index():
             #de dados contidos nos shapefiles
             class MapTable(object):
                 pass
-
-            engine_postgres = create_engine('postgresql://postgres:3333@localhost/rnmapas')
-            metadata = MetaData(bind=engine_postgres)
 
             #adcionado postgis
             connection_with_db = engine_postgres.connect()
@@ -76,7 +99,7 @@ def index():
 
             #definindo o modelo de tabela que recebrá os shapefiles
             map_table = db.Table(map_title_lower, metadata,
-                db.Column('id', db.Integer, primary_key=True, autoincrement=True),
+                db.Column('ids', db.Integer, primary_key=True, autoincrement=True),
                 *(db.Column(field[0], Unicode(255)) for field in shapefile_fields),
                 db.Column('geom', Geometry(geometry_type='GEOMETRY', srid=4326))
             )
@@ -87,24 +110,110 @@ def index():
             session.commit()
 
             #percorrendo a lista de registros para inserir no banco
-            record_id = 1
+            record_ids = 1
             for count, record in enumerate(shapefile_records):
                 #adcionando um id no inicio da lista de atributos de cada registro
-                record.insert(0, record_id)
+                record.insert(0, record_ids)
+                
+                #verificando tipo de geometria
+                if (shapefile_type_name == 'POLYGON') or (shapefile_type_name == 'MULTIPOLYGON'):
+                    gshape = pygeoif.MultiPolygon(pygeoif.geometry.as_shape(shapefile_shapes[count]))
+                    geom = 'SRID=4326;{0}'.format(gshape.wkt)
+                elif shapefile_type_name == 'POINT':
+                    point = shapefile_shapes[count].points[0]
+                    geom = 'SRID=4326;POINT({0} {1})'.format(point[0], point[1])
 
-                gshape = pygeoif.MultiPolygon(pygeoif.geometry.as_shape(shapefile_shapes[count]))
-                geom = 'SRID=4326;{0}'.format(gshape.wkt)
                 record.append(geom)
-
                 record_to_insert = map_table.insert().values(record)
                 connection_with_db = engine_postgres.connect()
                 connection_with_db.execute(record_to_insert)
-                record_id += 1
+                record_ids += 1
             
             connection_with_db.close()
             flash("Upload feito com sucesso!")
 
-    return render_template("gis/map.html", form_template = form, list_uploads_user = list_uploads_user)
+
+            #urls para requisições
+            workspacesUrl = 'http://'+ server +'/geoserver/rest/workspaces.json'
+            datastoresUrl = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace +'/datastores.json'
+            layerUrl = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace +'/datastores/'+ datastore +'/featuretypes'
+            #vetores que recebarão os nomes fornecidos nas requisições
+            workspace_names = []
+            datastore_names = []
+
+
+            #Pegando lista de workspaces
+            ws_list_response = requests.get(workspacesUrl, auth=auth)
+            #convertendo json para dicionário python
+            ws_parsed_json = json.loads(ws_list_response.text)
+
+            #percorrendo o vetor de wokspaces e adcionando a lista de nomes
+            for ws in ws_parsed_json['workspaces']['workspace']:
+                workspace_names.append(ws['name'])
+            
+            if workspace in workspace_names:
+                ds_list_response = requests.get(datastoresUrl, auth=auth)
+                ds_parsed_json = json.loads(ds_list_response.text)
+
+                for ds in ds_parsed_json['dataStores']['dataStore']:
+	                datastore_names.append(ds['name'])
+
+                if datastore in datastore_names:
+                    create_layer_data = '<featureType><name>'+ map_title_lower +'</name></featureType>'
+                    layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
+                else:
+                    create_datastore_data = """
+                    <dataStore>
+                    <name>postgis_rnmapas</name>
+                    <connectionParameters>
+                        <host>localhost</host>
+                        <port>5432</port>
+                        <database>rnmapas</database>
+                        <user>postgres</user>
+                        <passwd>3333</passwd>
+                        <dbtype>postgis</dbtype>
+                    </connectionParameters>
+                    </dataStore>
+
+                    """
+
+                    ds_add_response = requests.post(datatoresUrl, auth=auth, headers=headers, data=create_datastore_data)
+                    
+                    if ds_add_response.status_code == 201:
+                        create_layer_data = '<featureType><name>'+ map_title_lower +'</name></featureType>'
+                        layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
+            else:
+                create_workspace_data = '<workspace><name>'+ workspace +'</name></workspace>'
+
+                ws_add_response = requests.post(workspacesUrl, auth=auth, headers=headers, data=create_workspace_data)
+
+                if ws_add_response.status_code == 201:
+                    create_datastore_data = """
+                    <dataStore>
+                    <name>postgis_rnmapas</name>
+                    <connectionParameters>
+                        <host>localhost</host>
+                        <port>5432</port>
+                        <database>rnmapas</database>
+                        <user>postgres</user>
+                        <passwd>3333</passwd>
+                        <dbtype>postgis</dbtype>
+                    </connectionParameters>
+                    </dataStore>
+
+                    """
+
+                    ds_add_response = post(datatoresUrl, auth=auth, headers=headers, data=create_datastore_data)
+
+                    if ds_add_response.status_code == 201:
+                        create_layer_data = '<featureType><name>'+ table_name_lowercase +'</name></featureType>'
+
+                        layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
+
+    return render_template("gis/map.html",
+                            form_template = form, 
+                            list_uploads_user = list_uploads_user,
+                            lyr_list_text = lyr_list_text)
 
 
 
@@ -112,6 +221,11 @@ def index():
 @app.route("/sobre")
 def about():
     return render_template("gis/about.html")
+
+#-------------------------------------Contributors----------------------------
+@app.route("/colaboradores")
+def contributors():
+    return render_template("gis/contributors.html")
 
 
 

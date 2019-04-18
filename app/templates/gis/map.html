@@ -78,7 +78,7 @@
 
     <div class="sidebar-pane" id="download">
         <h1 class="sidebar-header">Download de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
-
+        {{ geometries_to_render }}
         <div class="ui form">
             <!-- Botão de download dos mapas selecionados -->
             <button  type="submit" class="ui primary fluid button">
@@ -174,6 +174,6 @@
 </div>
 </div>
 <!-- container map -->
-<div id="map" class="sidebar-map"></div>
+<div id="map" class="sidebar-map" data-layers = "{{ lyr_list_text }}"></div>
 
 {% endblock %}

@@ -24,8 +24,9 @@
 <body>
     <!-- menu -->
     <div class="ui menu">
-        <a href="/" class="item"><i class="map icon"></i>Mapas</a>
-        <a href="/sobre" class="item"><i class="info icon"></i>Sobre</a>
+        <a href="/" class="item">Mapas</a>
+        <a href="/sobre" class="item">Sobre</a>
+        <a href="/colaboradores" class="item">Colaboradores</a>
         {% if current_user.is_authenticated %}
 
         <div class="right menu">
@@ -35,10 +36,13 @@
 
         {% else %}
         <div class="right menu">
-            <a href="/registre-se" class="item"><i class="user plus icon"></i>Registre-se</a>
-            <a href="/login" class="item"><i class="sign in icon"></i>Entrar</a>
-        </div>
-
+            <a href="/registre-se" class="item">Registre-se</a>
+            <a href="/login" class="item">
+                <div class="ui primary button">
+                <i class="sign in icon"></i>Entrar
+                </div>
+            </a>
+        </div> 
         {% endif %}
     </div>
 
