@@ -1,0 +1,10 @@
+venv
+.vscode
+.vs
+__pycache__
+*.pyc
+*~
+Procfile
+runtime.txt
+README.md
+.gitignore

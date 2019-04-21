@@ -1,5 +1,5 @@
-from app import app, db
-from flask import render_template, redirect, flash, request
+from application import application, db
+from flask import render_template, redirect, flash, request, send_from_directory, current_app
 from flask_login import login_user, login_required, logout_user, current_user
 from werkzeug.utils import secure_filename
 from datetime import date
@@ -11,14 +11,16 @@ from sqlalchemy.orm import mapper, create_session
 import os
 import requests
 import json
+from unicodedata import normalize
 
-from app.models.forms import LoginForm, RegisterForm, UploadForm
-from app.models.tables import User, Map
+from application.models.forms import LoginForm, RegisterForm, UploadForm, UserEditForm
+from application.models.tables import User, Map
 
 #------------------------------------Index------------------------------------
-@app.route("/", methods=["POST","GET"])
+@application.route("/", methods=["POST","GET"])
 def index():
     form = UploadForm()
+    formEdit = UserEditForm()
 
     #------configurando conexão com postgres----------------------------------------------
     engine_postgres = create_engine('postgresql://postgres:3333@localhost/rnmapas')
@@ -32,11 +34,33 @@ def index():
     headers = {'Content-type': 'text/xml'}
     #-------------------------------------------------------------------------------------
 
-    #------Pegando nome dos layers no wokspace do projeto para enviar pro openlayers------
+    #------Pegando lista de layers no wokspace do projeto para enviar pro openlayers------
     layersInWorkspace = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace + '/layers.json'
     lyr_list_response = requests.get(layersInWorkspace, auth=auth)
-
+ 
     lyr_list_text = lyr_list_response.text
+
+    #------Pegando nome dos layers no wokspace do projeto para enviar pro frontend------
+    listMaps = Map.query.all()
+    infraestrutura = []
+    demografia = []
+    aspectosSociais = []
+    aspectosEconomicos = []
+    caracterizacaoTerritorial = []
+
+    for mapp in listMaps:
+        if mapp.category == "infraestrutura":
+            infraestrutura.append(mapp)
+        elif mapp.category == "demografia":
+            demografia.append(mapp)
+        elif mapp.category == "aspectos sociais":
+            aspectosSociais.append(mapp)
+        elif mapp.category == "aspectos economicos":
+            aspectosEconomicos.append(mapp)
+        elif mapp.category == "caracterização territorial":
+            caracterizacaoTerritorial.append(mapp)
+
+
     #--------------------------------------------------------------------------------------
     
     #------Verificando o usuário para exibir os mapas enviados pelo usuário----------------
@@ -68,7 +92,7 @@ def index():
             flash("Já existe um mapa cadastrado com esse titulo!")
         else:
             #inserindo registro na tabela de mapas (Map)
-            data_to_insert = Map(map_title, date.today(), map_category, False, current_user.id)
+            data_to_insert = Map(map_title, date.today(), map_category, False, current_user.name, current_user.id)
             db.session.add(data_to_insert)
             db.session.commit()
 
@@ -132,105 +156,44 @@ def index():
             connection_with_db.close()
             flash("Upload feito com sucesso!")
 
-
-            #urls para requisições
-            workspacesUrl = 'http://'+ server +'/geoserver/rest/workspaces.json'
-            datastoresUrl = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace +'/datastores.json'
+            #Criando layer em um datastore já existente.
+            #o workspace e datastore devem ser criados anteriormente o funcionamento do sistema
             layerUrl = 'http://'+ server +'/geoserver/rest/workspaces/'+ workspace +'/datastores/'+ datastore +'/featuretypes'
-            #vetores que recebarão os nomes fornecidos nas requisições
-            workspace_names = []
-            datastore_names = []
-
-
-            #Pegando lista de workspaces
-            ws_list_response = requests.get(workspacesUrl, auth=auth)
-            #convertendo json para dicionário python
-            ws_parsed_json = json.loads(ws_list_response.text)
-
-            #percorrendo o vetor de wokspaces e adcionando a lista de nomes
-            for ws in ws_parsed_json['workspaces']['workspace']:
-                workspace_names.append(ws['name'])
+            #sem acentuação
+            nameuNormalize = normalize('NFKD', map_title_lower).encode('ASCII', 'ignore').decode('ASCII')
+            print(nameuNormalize)           
+            create_layer_data = '<featureType><name>'+ nameuNormalize +'</name></featureType>'
+            layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
             
-            if workspace in workspace_names:
-                ds_list_response = requests.get(datastoresUrl, auth=auth)
-                ds_parsed_json = json.loads(ds_list_response.text)
-
-                for ds in ds_parsed_json['dataStores']['dataStore']:
-	                datastore_names.append(ds['name'])
-
-                if datastore in datastore_names:
-                    create_layer_data = '<featureType><name>'+ map_title_lower +'</name></featureType>'
-                    layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
-                else:
-                    create_datastore_data = """
-                    <dataStore>
-                    <name>postgis_rnmapas</name>
-                    <connectionParameters>
-                        <host>localhost</host>
-                        <port>5432</port>
-                        <database>rnmapas</database>
-                        <user>postgres</user>
-                        <passwd>3333</passwd>
-                        <dbtype>postgis</dbtype>
-                    </connectionParameters>
-                    </dataStore>
-
-                    """
-
-                    ds_add_response = requests.post(datatoresUrl, auth=auth, headers=headers, data=create_datastore_data)
-                    
-                    if ds_add_response.status_code == 201:
-                        create_layer_data = '<featureType><name>'+ map_title_lower +'</name></featureType>'
-                        layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
-            else:
-                create_workspace_data = '<workspace><name>'+ workspace +'</name></workspace>'
-
-                ws_add_response = requests.post(workspacesUrl, auth=auth, headers=headers, data=create_workspace_data)
-
-                if ws_add_response.status_code == 201:
-                    create_datastore_data = """
-                    <dataStore>
-                    <name>postgis_rnmapas</name>
-                    <connectionParameters>
-                        <host>localhost</host>
-                        <port>5432</port>
-                        <database>rnmapas</database>
-                        <user>postgres</user>
-                        <passwd>3333</passwd>
-                        <dbtype>postgis</dbtype>
-                    </connectionParameters>
-                    </dataStore>
-
-                    """
-
-                    ds_add_response = post(datatoresUrl, auth=auth, headers=headers, data=create_datastore_data)
-
-                    if ds_add_response.status_code == 201:
-                        create_layer_data = '<featureType><name>'+ table_name_lowercase +'</name></featureType>'
-
-                        layer_publish_response = requests.post(layerUrl, auth=auth, headers=headers, data=create_layer_data)
+            print(layer_publish_response)
 
     return render_template("gis/map.html",
-                            form_template = form, 
+                            form_template = form,
+                            form_template_edit = formEdit, 
                             list_uploads_user = list_uploads_user,
-                            lyr_list_text = lyr_list_text)
+                            lyr_list_text = lyr_list_text,
+                            infraestrutura = infraestrutura,
+                            demografia  = demografia,
+                            caracterizacaoTerritorial = caracterizacaoTerritorial,
+                            aspectosEconomicos = aspectosEconomicos,
+                            aspectosSociais = aspectosSociais)
 
 
 
 #-------------------------------------About-----------------------------------
-@app.route("/sobre")
+@application.route("/sobre")
 def about():
     return render_template("gis/about.html")
 
 #-------------------------------------Contributors----------------------------
-@app.route("/colaboradores")
+@application.route("/colaboradores")
 def contributors():
     return render_template("gis/contributors.html")
 
 
 
 #--------------------------------------Login---------------------------------
-@app.route("/login", methods=["POST","GET"])
+@application.route("/login", methods=["POST","GET"])
 def login():
     #Instancia a classe LoginForm de tables.py
     form = LoginForm()
@@ -260,7 +223,7 @@ def login():
 
 
 #------------------------------Register--------------------------------
-@app.route("/registre-se", methods=["POST","GET"])
+@application.route("/registre-se", methods=["POST","GET"])
 def register():
     #Instancia a classe RegisterForm de tables.py
     form = RegisterForm()
@@ -293,11 +256,77 @@ def register():
 
     return render_template("auth/register.html", form_template = form)
 
+#--------------------------------Register----------------------------------------
+@application.route("/editar_usuario", methods=["POST", "GET"])
+@login_required
+def userEdit():
+    if request.method == "POST":
+        newName = request.form['name']
+        newLastName = request.form['lastname']
+        newEmail = request.form['email']
+        newDescription = request.form['description']
+        newPassword = request.form['password']
+        newPasswordConfirm = request.form['password_confirm']
+        currentPassword = request.form['current_password']
+
+        user = User.query.filter_by(id = current_user.id).first()
+
+        if user.password == currentPassword:
+            if newName != "":
+                user.name = newName
+                db.session.commit()
+                flash("Dados alterados com sucesso!")
+
+            if newLastName != "":
+                user.lastname = newLastName
+                db.session.commit()
+                flash("Dados alterados com sucesso!")
+
+            if newDescription != "":
+                user.description = newDescription
+                db.session.commit()
+                flash("Dados alterados com sucesso!")
+
+            if newEmail != "":
+                user.email = newEmail
+                db.session.commit()
+                flash("Dados alterados com sucesso!")
+
+            if (newPassword != "" and newPasswordConfirm != ""):
+                if newPassword == newPasswordConfirm:
+                    user.password = newPassword
+                    db.session.commit()
+                    flash("Dados alterados com sucesso!")
+                else:
+                    flash("Senhas não são iguais.")
+        else:
+            flash("O password de confirmação dos dados está incorreto.")
+
+    return redirect("/")
     
 
-#--------------------------------Logout----------------------------------------
-@app.route("/logout")
+#--------------------------------Logout--------------------------------------------
+@application.route("/logout")
 @login_required
 def logout():
     logout_user()
     return redirect("/login")
+
+#--------------------------------Download----------------------------------------
+@application.route("/shp", methods=["GET", "POST"])
+def shp():
+    if request.method == "POST":
+        shpName = request.form['shp']
+        return send_from_directory(directory='../uploads/', filename=shpName + '.shp', as_attachment=True)
+
+@application.route("/dbf", methods=["GET", "POST"])
+def dbf():
+    if request.method == "POST":
+        shpName = request.form['dbf']
+        return send_from_directory(directory='../uploads/', filename=shpName + '.dbf', as_attachment=True)
+
+@application.route("/shx", methods=["GET", "POST"])
+def shx():
+    if request.method == "POST":
+        shpName = request.form['shx']
+        return send_from_directory(directory='../uploads/', filename=shpName + '.shx', as_attachment=True)

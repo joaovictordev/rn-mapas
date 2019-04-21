@@ -19,7 +19,7 @@
         </div>
     </h2>
 
-    <div class="field">
+    <div class="field required">
         <label>Nome</label>
         <div class="two fields">
             <div class="field">
@@ -36,7 +36,7 @@
         {{ form_template.description(placeholder="Insira uma breve descrição sobre você.") }}
     </div>
 
-    <div class="field">
+    <div class="field required">
         <label>Email</label>
         <div class="ui left icon input">
             <i class="envelope icon"></i>
@@ -44,7 +44,7 @@
         </div>
     </div>
 
-    <div class="field">
+    <div class="field required">
         <label>Senha</label>
         <div class="two fields">
             <div class="field">
@@ -63,6 +63,10 @@
     </div>
 
     <button type="submit" class="ui primary button">Cadastrar</button>
+
+    <div class="field required">
+        <label>Campos obrigatórios.</label>
+    </div>
 </form>
 
 </div>

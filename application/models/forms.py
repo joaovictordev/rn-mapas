@@ -25,3 +25,12 @@ class UploadForm(Form):
                                                 ('infraestrutura', 'Infraestrutura'),
                                                 ('aspectos economicos', 'Aspectos Econômicos')])
     fileshape = MultipleFileField("fileshape", validators=[FileRequired(), FileAllowed(['shp'], 'shapefiles')])
+
+class UserEditForm(Form):
+    name = StringField("name")
+    lastname = StringField("lastname")
+    description = TextAreaField("description")
+    email = StringField("email")
+    password = PasswordField("password", validators=[Length(min=6, max=32)])
+    password_confirm = PasswordField("password_confirm", validators=[Length(min=6, max=32)])
+    current_password = PasswordField("password", validators=[DataRequired(), Length(min=6, max=32)])

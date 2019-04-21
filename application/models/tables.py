@@ -1,4 +1,4 @@
-from app import db, login_manager
+from application import db, login_manager
 
 class User(db.Model):
     __tablename__ = "users"
@@ -47,14 +47,16 @@ class Map(db.Model):
     send_date = db.Column(db.DateTime, nullable=False)
     category = db.Column(db.String, nullable=False)
     status = db.Column(db.Boolean, nullable=False, default=False)
+    author = db.Column(db.String, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
 
-    def __init__(self, title, send_date, category, status, user_id):
+    def __init__(self, title, send_date, category, status, author, user_id):
         self.title = title
         self.send_date = send_date
         self.category = category
         self.status = status
-        self.user_id = user_id 
+        self.author = author
+        self.user_id = user_id
 
     def __repr__(self):
         return '<Map %r>' % self.title

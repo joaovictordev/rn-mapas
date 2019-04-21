@@ -1,0 +1,31 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/about.css">
+{% endblock %}
+
+{% block content %}
+<div class="ui two column centered grid">
+    <di class="column">
+
+        <h2 id="header1" class="ui blue header">
+            <img src="../../static/img/logo-256.png">
+            RN em Mapas
+        </h2>
+
+        <!-- Cards com informações dos Colaboradores-->
+        <p class="texto">
+            O RN em Mapas é um projeto da Universidade Federal Rural do Semi-Árido
+            que tem como objetivo ser um repositório de informações georreferenciadas
+            do estado do Rio Grande do Norte. Tem como coordenador o professor
+            <a href="#">Rogério Taygra de Vasconcelos</a>, ministrante da disciplina de 
+            Geoprocessamento no Curso de Engenharia Civil da UFERSA, campus Angicos,
+            o projeto consiste em um Sistema de Informações Geográficas para web (WebSIG),
+            desenvolvido pelo discente do curso de Engenharia Civil e desevolvedor web 
+            <a href="#">João Victor Rodrigues de Souza</a> através do qual são disponibilizados
+             mapas no formato ESRI Shapefile. 
+        </p>
+
+    </di> 
+</div>
+{% endblock %}

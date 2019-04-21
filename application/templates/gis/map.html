@@ -1,0 +1,273 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="../static/css/map.css">
+{% endblock %}
+
+{% block content %}
+<!-- sidebar -->
+<div id="sidebar" class="sidebar collapsed">
+
+<!-- Nav tabs -->
+<div class="sidebar-tabs">
+    <ul role="tablist">
+        <li><a href="#home" role="tab"><i class="clone icon"></i></a></li>
+        <li><a href="#download" role="tab"><i class="download icon"></i></a></li>
+        {% if current_user.is_authenticated %}
+        <li><a href="#upload" role="tab"><i class="upload icon"></i></a></li>
+        {% endif %}
+    </ul>
+
+    <ul role="tablist">
+        {% if current_user.is_authenticated %}
+        <li><a href="#profile" role="tab"><i class="id badge icon"></i></a></li>
+        {% endif %}
+    </ul>
+</div>
+
+<!-- Tab panes -->
+<div class="sidebar-content">
+    <!-- Pane dos Layers -->
+    <div class="sidebar-pane" id="home">
+        <h1 class="sidebar-header">Layers<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+            <!-- Lista dos layers aqui -->
+            <div id="layers" class="layer-switcher"></div>
+    </div>
+
+    <div class="sidebar-pane" id="profile">
+        <h1 class="sidebar-header">Perfil do usuário<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+
+        {% include 'auth/message.html' %}
+        <!--Formulário de alterar dados-->
+        <form class="ui form" enctype="multipart/form-data" method="POST" action="/editar_usuario">
+            {{ form_template_edit.csrf_token}}
+            <div class="field">
+                <label>Nome</label>
+                <div class="two fields">
+                    <div class="field">
+                            {{ form_template_edit.name(placeholder=current_user.name) }}
+                    </div>
+                    <div class="field">
+                            {{ form_template_edit.lastname(placeholder=current_user.lastname) }}
+                    </div>
+                </div>
+            </div>
+        
+            <div class="field">
+                <label>Descrição Pessoal</label>
+                {{ form_template_edit.description(placeholder=current_user.description) }}
+            </div>
+        
+            <div class="field">
+                <label>Email</label>
+                <div class="ui left icon input">
+                    <i class="envelope icon"></i>
+                    {{ form_template_edit.email(placeholder=current_user.email) }}
+                </div>
+            </div>
+        
+            <!-- Accordion de nova senha-->
+            <div class="ui accordion">
+                <div class="title">
+                        <i class="dropdown icon"></i>
+                        Senha
+                </div>
+                <div class="content">
+                    <div class="field">
+                        <label>Senha</label>
+                        <div class="two fields">
+                            <div class="field">
+                                <div class="ui left icon input">
+                                <i class="lock icon"></i>
+                                    {{ form_template_edit.password(placeholder="Nova senha") }}
+                                </div>
+                            </div>
+                            <div class="field">
+                                <div class="ui left icon input">
+                                <i class="lock icon"></i>
+                                    {{ form_template_edit.password_confirm(placeholder="Repita a nova senha") }} 
+                                </div> 
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="required field">
+                <label>Senha Atual</label>
+                <div class="ui left icon input">
+                    <i class="lock icon"></i>
+                    {{ form_template_edit.current_password }}
+                </div>
+                <label>Confirme alterações com a senha atual.</label>
+            </div>
+
+        
+            <button type="submit" class="ui primary button">Alterar</button>
+        </form>
+    </div>
+
+    <div class="sidebar-pane" id="download">
+        <h1 class="sidebar-header">Download de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+        {{ geometries_to_render }}
+        <div class="ui form">
+            <!-- Lista de Mapas -->
+            <!-- Formulário que enviam dados dos botões de download-->
+            <form id="form-shp" method="POST" enctype="multipart/form-data" action="/shp"></form>
+            <form id="form-dbf" method="POST" enctype="multipart/form-data" action="/dbf"></form>
+            <form id="form-shx" method="POST" enctype="multipart/form-data" action="/shx"></form>
+
+            <h3 class="ui top attached header">Caracterização Territorial</h3>
+            <div class="ui attached segment">
+                <div class="ui list">
+                {% for map in caracterizacaoTerritorial %}
+                    <div class="item">
+                        {{ map.title }}
+                        <button form="form-shp" type="submit" class="ui basic mini label" name="shp" value="{{ map.title }}">shp</button>
+                        <button form="form-dbf" type="submit" class="ui basic green mini label" name="dbf" value="{{ map.title }}">dbf</button>
+                        <button form="form-shx" type="submit" class="ui basic red mini label" name="shx" value="{{ map.title }}">shx</button>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="ui top attached header">Infraestrutura</h3>
+            <div class="ui attached segment">
+                <div class="ui list">
+                {% for map in infraestrutura %}
+                <div class="item">
+                    {{ map.title }}
+                    <button form="form-shp" type="submit" class="ui basic mini label" name="shp" value="{{ map.title }}">shp</button>
+                    <button form="form-dbf" type="submit" class="ui basic green mini label" name="dbf" value="{{ map.title }}">dbf</button>
+                    <button form="form-shx" type="submit" class="ui basic red mini label" name="shx" value="{{ map.title }}">shx</button>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="ui top attached header">Demografia</h3>
+            <div class="ui attached segment">
+                <div class="ui list">
+                {% for map in demografia %}
+                <div class="item">
+                    {{ map.title }}
+                    <button form="form-shp" type="submit" class="ui basic mini label" name="shp" value="{{ map.title }}">shp</button>
+                    <button form="form-dbf" type="submit" class="ui basic green mini label" name="dbf" value="{{ map.title }}">dbf</button>
+                    <button form="form-shx" type="submit" class="ui basic red mini label" name="shx" value="{{ map.title }}">shx</button>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+
+            <h3 class="ui top attached header">Aspectos Sociais</h3>
+            <div class="ui attached segment">
+                <div class="ui list">
+                {% for map in aspectosSociais %}
+                <div class="item">
+                    {{ map.title }}
+                    <button form="form-shp" type="submit" class="ui basic mini label" name="shp" value="{{ map.title }}">shp</button>
+                    <button form="form-dbf" type="submit" class="ui basic green mini label" name="dbf" value="{{ map.title }}">dbf</button>
+                    <button form="form-shx" type="submit" class="ui basic redmini label" name="shx" value="{{ map.title }}">shx</button>
+                </div>
+                {% endfor %}
+                </div>            
+            </div>
+
+            <h3 class="ui top attached header">Aspectos Econômicos</h3>
+            <div class="ui attached segment">
+                <div class="ui list">
+                {% for map in aspectosEconomicos %}
+                <div class="item">
+                    {{ map.title }}
+                    <button form="form-shp" type="submit" class="ui basic mini label" name="shp" value="{{ map.title }}">shp</button>
+                    <button form="form-dbf" type="submit" class="ui basic green mini label" name="dbf" value="{{ map.title }}">dbf</button>
+                    <button form="form-shx" type="submit" class="ui basic redmini label" name="shx" value="{{ map.title }}">shx</button>
+                </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="sidebar-pane" id="upload">
+        <h1 class="sidebar-header">Upload de Mapas<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+
+        <!-- Accordion de upload-->
+        <div class="ui accordion">
+            <div class="title">
+                <div class="ui primary basic fluid button">
+                    <i class="up arrow icon"></i>
+                    Envie um mapa
+                </div>
+            </div>
+            <div class="content">
+                {% include 'auth/message.html' %}
+                <!--Formulário de upload-->
+                <form class="ui form" enctype="multipart/form-data" method="POST">
+                    {{ form_template.csrf_token}}
+                    <div class="field">
+                        <label>Título do mapa</label>
+                        {{ form_template.title(placeholder="Digite o titulo do mapa") }}
+                        <label class="required">
+                            Deve ser igual ao nome do arquivo sem a extensão.
+                            Exemplo: Arquivo.shp -> Arquivo
+                        </label>
+                    </div>
+                    <div class="field">
+                        <label>Categoria</label>
+                        {{ form_template.category(placeholder="Digite a categoria do mapa") }}
+                    </div>
+                    <div class="inline fields">
+                        <div class="eight wide field">
+                            {{ form_template.fileshape() }}
+                        </div>
+                        <div class="eight wide field">
+                            <button type="submit" class="ui button primary fluid">Enviar</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="ui divider"></div>
+        <p>Últimos mapas enviados</p>
+
+        <!-- Accordion -->
+        {% for upload_item in list_uploads_user %}
+        <div class="ui styled accordion">
+            <div class="title">
+                <i class="dropdown icon"></i>
+                {{ upload_item.title }}
+            </div>
+            <div class="content">
+                <!-- Lista de detalhes de um mapa -->
+                <div class="ui horizontal bulleted list transition hidden">
+                    <a class="item">
+                        {{ upload_item.send_date }}
+                    </a>
+                    <a class="item">
+                        {% if upload_item.status == False %}
+                            Em espera
+                        {% else %}
+                            Aprovado
+                        {% endif %}
+                    </a>
+                    <a class="item">
+                        Enviar nova versão
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+
+    </div>
+
+    <div class="sidebar-pane" id="settings">
+        <h1 class="sidebar-header">Configurações<span class="sidebar-close"><i class="angle left icon"></i></span></h1>
+    </div>
+</div>
+</div>
+<!-- container map -->
+<div id="map" class="sidebar-map" data-layers = "{{ lyr_list_text }}"></div>
+
+{% endblock %}
