@@ -5,19 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>RN em Mapas | UFERSA Angicos</title>
-    <link rel="icon" type="image/png" href="../static/img/logo.png"/>
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='img/logo.png') }}"/>
 
     {% block head %}
     {% endblock %}
 
+
     <!-- semantic css -->
-    <link rel="stylesheet" href="../static/semantic/semantic.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='semantic/semantic.css') }}">
     <!-- openlayers css -->
-    <link rel="stylesheet" href="../static/ol/ol.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='ol/ol.css') }}">
     <!-- sidebar-ol3 css -->
-    <link rel="stylesheet" href="../static/sidebar/ol3-sidebar.css"></link>
+    <link rel="stylesheet" href="{{ url_for('static', filename='sidebar/ol3-sidebar.css') }}">
     <!-- layerswitcher css -->
-    <link rel="stylesheet" href="../static/layerswitcher/ol-layerswitcher.css"></link>
+    <link rel="stylesheet" href="{{ url_for('static', filename='layerswitcher/ol-layerswitcher.css') }}">
+    <!-- layerswitcher css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='ol-popup/ol-popup.css') }}">
+    <!-- layerswitcher css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/mypopup.css') }}">
+
 
     
 </head>
@@ -50,17 +56,22 @@
     {% endblock %}
 
     <!-- jquery -->
-    <script src="../static/jquery/jquery.min.js"></script>
+    <script src="{{ url_for('static', filename='jquery/jquery.min.js') }}"></script>
     <!-- semantic js -->
-    <script src="../static/semantic/semantic.js"></script>
+    <script src="{{ url_for('static', filename='semantic/semantic.js') }}"></script>
     <!-- openlayers js -->
-    <script src="../static/ol/ol.js"></script>
+    <script src="{{ url_for('static', filename='ol/ol.js') }}"></script>
     <!-- sidebar-ol3 js -->
-    <script src="../static/sidebar/ol3-sidebar.js"></script>
+    <script src="{{ url_for('static', filename='sidebar/ol3-sidebar.js') }}"></script>
     <!-- layerswitcher js -->
-    <script src="../static/layerswitcher/ol-layerswitcher.js"></script>
+    <script src="{{ url_for('static', filename='layerswitcher/ol-layerswitcher.js') }}"></script>
     <!-- config-mapa js -->
-    <script src="../static/js/config-mapa.js"></script>
+    <script src="{{ url_for('static', filename='js/config-mapa.js') }}"></script>
+    <!-- ol-popup -->
+    <script src="{{ url_for('static', filename='ol-popup/ol-popup.js') }}"></script>
+    <!-- mypopup -->
+    <script src="{{ url_for('static', filename='js/mypopup.js') }}"></script>
+
     <!-- set height map -->
     {% block scripts %}
     {% endblock %}

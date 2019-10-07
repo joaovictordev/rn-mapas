@@ -5,18 +5,18 @@ from flask_migrate import Migrate, MigrateCommand
 from flask_login import LoginManager
 from flask_uploads import UploadSet, configure_uploads, ALL
 
-application = Flask(__name__)
-application.config.from_object('config')
+app = Flask(__name__)
+app.config.from_object('config')
 
-db = SQLAlchemy(application)
-migrate = Migrate(application, db)
+db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
-manager = Manager(application)
+manager = Manager(app)
 manager.add_command('db', MigrateCommand)
 
 login_manager = LoginManager()
-login_manager.init_app(application)
+login_manager.init_app(app)
 
 
-from application.models import tables
-from application.controllers import default
+from app.models import tables
+from app.controllers import default

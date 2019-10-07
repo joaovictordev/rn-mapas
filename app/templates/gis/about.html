@@ -1,0 +1,46 @@
+{% extends 'layout.html' %}
+
+{% block head %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/about.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="ui two column centered grid">
+    <div class="column">
+
+        <h2 id="header1" class="ui blue header">
+            <img src="{{ url_for('static', filename='img/logo-256.png') }}">
+            RN em Mapas
+        </h2>
+
+        <!-- Cards com informações dos Colaboradores-->
+        <p class="texto">
+            O Portal RN em Mapas é o resultado do esforço e desejo de 
+            professores/pesquisadores e alunos da Universidade Federal 
+            Rural do Semi-Árido/UFERSA, campus Angicos, em contribuir 
+            para o desenvolvimento ordenado do estado do Rio Grande do Norte. 
+        </p>
+        <p class="texto">
+            Neste portal, encontram-se dados georreferenciados referentes
+             aos mais diversos aspectos ambientais, sociais e de infraestrutura
+              do RN, produzidos e disponibilizados com um único interesse: 
+              possibilitar a realização de estudos e projetos voltados para o 
+              planejamento e ordenamento do espaço público. 
+        </p>
+        <p class="texto">
+            Aqui, professores, estudantes, pesquisadores, engenheiros, gestores 
+            públicos e demais interessados encontrarão dados sobre a distribuição 
+            de equipamentos comunitários, condições naturais de relevo e solo, 
+            arruamentos, dentre outros, para que assim possam desenvolver ações 
+            voltados para a promoção da melhoria da qualidade de vida da população potiguar.
+        </p>
+        <p class="texto">
+            Sejam bem-vindos,
+        </p>
+        <p class="texto">
+            TAMEN NOS ID QUERIMUR, FACERET
+        </p>
+
+    </div> 
+</div>
+{% endblock %}

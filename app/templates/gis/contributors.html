@@ -1,7 +1,7 @@
 {% extends 'layout.html' %}
 
 {% block head %}
-<link rel="stylesheet" href="../static/css/contributors.css">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/contributors.css') }}">
 {% endblock %}
 
 {% block content %}
@@ -17,7 +17,7 @@
         <div class="ui cards">
             <div class="card">
                 <div class="content">
-                    <div class="header">João Victor Rodrigues de Souza</div>
+                    <div class="header"><a href="#">João Victor Rodrigues de Souza</a></div>
                     <div class="description">
                         Desenvolvedor web
                     </div>
@@ -25,7 +25,7 @@
             </div>
             <div class="card">
                 <div class="content">
-                    <div class="header">Rogério Taygra Vasconcelos Fernandes</div>
+                    <div class="header"><a href="#">Rogério Taygra Vasconcelos Fernandes</a></div>
                     <div class="description">
                         Coordenador
                     </div>
